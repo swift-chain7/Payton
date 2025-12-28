@@ -3,520 +3,343 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ESCROW HOLDING</title>
+  <title>Agent Buss — Secure Dashboard (Login → Smooth Transition)</title>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
     :root {
       --emerald: #10b981;
-      --bg: #0a0a0b;
+      --bg: #050507;
       --glass: rgba(255,255,255,0.03);
     }
     html,body { height:100%; }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: var(--bg);
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(16,185,129,0.06), transparent 8%),
+                  radial-gradient(1000px 500px at 90% 90%, rgba(96,165,250,0.03), transparent 10%),
+                  var(--bg);
       color: #fff;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
+      overflow-y: auto;
     }
 
-    /* Simple chain/blockchain animation */
-    .chain-wrap { position:relative; height:120px; overflow:hidden; }
-    .chain {
-      display:flex;
-      gap:18px;
-      position:absolute;
-      left:0;
-      top:50%;
-      transform:translateY(-50%);
-      animation: scroll-chain 8s linear infinite;
-    }
-    .block {
-      width:80px;
-      height:56px;
-      background:linear-gradient(180deg,#111827,#0b1220);
-      border-radius:12px;
-      box-shadow: 0 6px 24px rgba(16,185,129,0.06), inset 0 1px 0 rgba(255,255,255,0.02);
-      padding:8px;
-      border:1px solid rgba(255,255,255,0.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:700;
-      color:var(--emerald);
-      font-family:monospace;
-      letter-spacing: -0.5px;
-      position:relative;
-    }
-    .block::after {
-      content:'';
-      position:absolute;
-      right:-14px;
-      width:14px;
-      height:2px;
-      background:rgba(255,255,255,0.04);
-      top:50%;
-      transform:translateY(-50%);
-      border-radius:2px;
-    }
-    @keyframes scroll-chain {
-      0% { transform: translateX(0) translateY(-50%); }
-      100% { transform: translateX(-50%) translateY(-50%); }
+    /* LOGIN LAYOUT */
+    #loginShell {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 90;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.8));
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: opacity .6s ease, transform .6s ease;
     }
 
-    /* Wire + electricity */
-    .wire-svg { width:100%; height:120px; overflow:visible; }
-    .wire-path { stroke: rgba(255,255,255,0.06); stroke-width:4; filter: drop-shadow(0 0 6px rgba(16,185,129,0.08)); }
-    .spark { stroke: url(#sparkGrad); stroke-width:6; stroke-linecap:round; stroke-dasharray:1, 120; filter: drop-shadow(0 0 8px rgba(16,185,129,0.9)); animation: spark-move 2s linear infinite; }
-    @keyframes spark-move {
-      0% { stroke-dashoffset: 0; opacity:1; }
-      100% { stroke-dashoffset: -122; opacity:0.2; }
+    /* Entrance/exit animations */
+    .login-enter {
+      animation: loginIn .6s cubic-bezier(.22,.9,.35,1) both;
+    }
+    .login-exit {
+      animation: loginOut .6s cubic-bezier(.22,.9,.35,1) both;
+    }
+    @keyframes loginIn {
+      from { opacity: 0; transform: translateY(24px) scale(.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes loginOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(-24px) scale(.98); }
     }
 
-    /* Processing overlay */
-    .processing-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.8)); backdrop-filter: blur(6px); }
+    /* Dashboard reveal animation */
+    .dashboard {
+      transform: translateY(18px) scale(.995);
+      opacity: 0;
+      filter: blur(6px) saturate(.9);
+      transition: transform .8s cubic-bezier(.22,.9,.35,1), opacity .8s ease, filter .9s ease;
+    }
+    .dashboard.revealed {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      filter: blur(0) saturate(1);
+    }
 
-    /* small UI tweaks */
-    .glass-card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); }
-    /* login overlay */
-    #loginOverlay { position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85)); }
-    /* small pulse for "electricity" dot */
-    .pulse {
-      width:12px; height:12px; border-radius:999px;
-      background:linear-gradient(90deg,var(--emerald),#60a5fa);
-      box-shadow: 0 0 18px rgba(16,185,129,0.85), 0 0 8px rgba(96,165,250,0.4);
+    /* Login card */
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      border-radius: 18px;
+      padding: 26px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.7), 0 2px 8px rgba(16,185,129,0.03);
+    }
+
+    .logo-badge {
+      width: 56px; height:56px; border-radius:12px;
+      background: linear-gradient(180deg, #34d399, #059669);
+      display:flex; align-items:center; justify-content:center; font-weight:800; color:#04281b;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.12);
+    }
+
+    /* Error message */
+    .login-error {
+      display: none;
+      background: rgba(185,28,28,0.08);
+      border: 1px solid rgba(185,28,28,0.14);
+      color: #ffb4b4;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .login-error.visible { display: block; }
+
+    /* Accent focus for inputs */
+    input:focus { box-shadow: 0 6px 24px rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.6) }
+
+    /* small helper text */
+    .muted { color: #9ca3af; font-size: 13px; }
+
+    /* For reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .login-exit, .login-enter, .dashboard, .dashboard.revealed { transition: none; animation: none; }
     }
   </style>
 </head>
-<body class="selection:bg-emerald-500/30 overflow-x-hidden">
+<body>
 
-<!-- LOGIN OVERLAY -->
-<div id="loginOverlay" role="dialog" aria-modal="true">
-  <div class="w-full max-w-md p-8 rounded-2xl glass-card">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-xl bg-emerald-400 flex items-center justify-center text-black font-bold">AB</div>
-      <div>
-        <div class="font-black text-lg">Login</div>
-        <div class="text-xs text-zinc-400">_______________</div>
-      </div>
-    </div>
-
-    <form id="loginForm" class="space-y-4" autocomplete="off" novalidate>
-      <div>
-        <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Username</label>
-        <input id="loginUser" name="username" autocomplete="off" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
-      </div>
-      <div>
-        <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Password</label>
-        <input id="loginPass" name="password" type="password" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
-      </div>
-
-      <div id="loginError" class="hidden text-sm text-red-400 font-black uppercase">THEFT DETECTION UNABLE TO ACCESS RECOVERY PAYMENT</div>
-
-      <div class="flex justify-end">
-        <!-- Added explicit id for the submit button and type=submit -->
-        <button id="loginSubmit" type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-6 rounded-xl">Login</button>
-      </div>
-
-      <div class="text-xs text-zinc-500 mt-2"><b>FUNDS ARE INACCESSIBLE WITH WRONG LOGIN CREDENTIALS 🪪</b></div>
-    </form>
-  </div>
-</div>
-
-<!-- NAV -->
-<nav class="border-b border-white/[0.05] bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-        <i data-lucide="shield-check" class="w-5 h-5"></i>
-      </div>
-      <span class="font-bold text-xl tracking-tight text-white uppercase italic">Agent Buss</span>
-    </div>
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-3 pl-4 border-l border-white/[0.05]">
-        <div class="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-xs font-bold text-white">AB</div>
-        <div class="hidden sm:block text-sm font-semibold">Agent Buss</div>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
-  <!-- Balance Card -->
-  <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-zinc-900 via-[#121214] to-[#0a0a0b] border border-white/[0.08] p-10 sm:p-12 shadow-2xl">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/[0.05] rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
-      <div class="space-y-6">
-        <div class="flex items-center gap-2.5 text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full w-fit border border-emerald-500/20">
-          <i data-lucide="trending-up" class="w-4 h-4"></i>
-          <span class="text-[10px] font-black uppercase tracking-widest">Asset Valuation</span>
-        </div>
+  <!-- LOGIN SHELL: appears first -->
+  <div id="loginShell" class="login-enter" aria-modal="true" role="dialog">
+    <div class="login-card">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="logo-badge">AB</div>
         <div>
-          <div class="text-zinc-500 text-sm font-medium mb-2">Available Balance</div>
-          <h1 class="text-6xl sm:text-7xl font-black text-white tracking-tighter" style="text-shadow: 0 0 20px rgba(16,185,129,0.25);">
-            $194,000.67 <span class="text-2xl text-zinc-600 font-normal uppercase">USD</span>
-          </h1>
+          <div class="font-black text-xl">Agent Buss</div>
+          <div class="muted text-xs">Secure access — enter your credentials</div>
         </div>
       </div>
-      <button id="openPayoutBtn" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-6 px-10 rounded-2xl text-lg flex items-center transition-all transform hover:scale-105 active:scale-95">
-        <i data-lucide="wallet" class="mr-3 w-6 h-6"></i> Request Payout
-      </button>
-    </div>
-  </div>
 
-  <!-- Market Stats -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-      <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Bitcoin</div><div class="text-xl font-bold">$98,231.40</div></div>
-      <div class="text-emerald-500 text-xs font-bold">+4.42%</div>
-    </div>
-    <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-      <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Ethereum</div><div class="text-xl font-bold">$4,412.10</div></div>
-      <div class="text-emerald-500 text-xs font-bold">+1.85%</div>
-    </div>
-    <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-      <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Tether</div><div class="text-xl font-bold">$1.00</div></div>
-      <div class="text-zinc-500 text-xs font-bold">0.00%</div>
-    </div>
-  </div>
-</main>
-
-<!-- PAYOUT MODAL -->
-<div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4">
-  <div class="bg-[#0a0a0b] border border-white/10 w-full max-w-[600px] rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-    <div class="h-1.5 bg-gradient-to-r from-emerald-500 to-blue-500 w-full"></div>
-    <div class="p-8 space-y-6">
-      <div class="flex justify-between items-start">
+      <form id="loginForm" class="space-y-4" autocomplete="off" novalidate>
         <div>
-          <h2 class="text-2xl font-black italic">PAYOUT REQUEST</h2>
-          <p class="text-zinc-500 text-sm">Select method and enter destination</p>
+          <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Username</label>
+          <input id="loginUser" name="username" required
+                 class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
         </div>
-        <button onclick="closeModal()" class="text-zinc-500 hover:text-white"><i data-lucide="x"></i></button>
-      </div>
 
-      <div class="space-y-4">
-        <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Method</label>
-        <div id="methodGrid" class="grid grid-cols-2 gap-2">
-          <button data-method="bank" class="method-btn p-4 border-2 border-emerald-500 bg-emerald-500/10 rounded-xl text-center text-sm font-bold">BANK</button>
-          <button data-method="btc" class="method-btn p-4 border border-white/5 bg-zinc-900 rounded-xl text-center text-sm font-bold text-zinc-500">BTC</button>
-          <button data-method="eth" class="method-btn p-4 border border-white/5 bg-zinc-900 rounded-xl text-center text-sm font-bold text-zinc-500">ETH</button>
-          <button data-method="usdt" class="method-btn p-4 border border-white/5 bg-zinc-900 rounded-xl text-center text-sm font-bold text-zinc-500">USDT</button>
+        <div>
+          <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Password</label>
+          <input id="loginPass" name="password" type="password" required
+                 class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
         </div>
-      </div>
 
-      <div id="addressSection" class="space-y-4">
-        <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Payout Address / Bank Details</label>
-        <input id="payoutDest" type="text" placeholder="Enter details..." class="w-full bg-zinc-900 border border-white/10 h-14 rounded-xl px-4 font-mono text-sm focus:border-emerald-500 outline-none" />
-        <div id="amountRow" class="flex gap-3">
-          <input id="payoutAmount" type="number" step="0.01" min="0" value="1000" class="w-40 bg-zinc-900 border border-white/10 h-12 rounded-xl px-3 text-sm outline-none" />
-          <div class="text-zinc-500 text-sm flex items-center px-3">USD</div>
+        <div id="loginError" class="login-error text-sm">
+          THEFT DETECTION — UNABLE TO ACCESS RECOVERY PAYMENT
         </div>
-      </div>
 
-      <button id="submitPayout" class="w-full bg-emerald-500 py-4 rounded-2xl font-bold text-black hover:bg-emerald-400 transition-all">Submit Request</button>
-    </div>
-
-    <!-- Fee / Error View (hidden by default) -->
-    <div id="action-view" class="absolute inset-0 bg-[#0a0a0b] hidden flex flex-col">
-      <div class="bg-red-500/10 p-6 border-b border-red-500/20 flex gap-4 items-center">
-        <i data-lucide="alert-triangle" class="text-red-500 w-8 h-8"></i>
-        <div><h3 class="font-black text-red-500 uppercase">System Halted</h3><p class="text-xs text-red-400">Network Fee Required</p></div>
-      </div>
-      <div class="p-8 space-y-6">
-        <p class="text-sm text-zinc-400">A mandatory fee of <b>$2600.00 USD</b> is required to synchronize the payout.</p>
-        <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10 space-y-2">
-          <div class="text-[10px] text-zinc-500 font-black uppercase">Send BTC to:</div>
-          <div id="finalAddr" class="font-mono text-[10px] text-emerald-400 break-all bg-black p-3 rounded-lg">bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l</div>
+        <div class="flex items-center justify-between gap-4">
+          <div class="muted text-xs">No registration — enter credentials to continue</div>
+          <button id="loginBtn" type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 px-5 rounded-lg">Login</button>
         </div>
-        <button class="w-full bg-emerald-500 py-4 rounded-2xl font-bold text-black">Confirm Payment Sent</button>
-      </div>
+
+        <div class="text-xs text-zinc-500 mt-2">Demo credentials: <b>agentbuss</b> / <b>agent2025</b> (client-side demo)</div>
+      </form>
     </div>
   </div>
-</div>
 
-<!-- PROCESSING OVERLAY (used during simulated sending) -->
-<div id="processing" class="processing-overlay hidden">
-  <div class="max-w-3xl w-full p-6 rounded-2xl glass-card">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <div class="text-xs text-zinc-400 font-black uppercase">Transaction Processing</div>
-        <div id="procMethod" class="text-lg font-bold">Preparing...</div>
-      </div>
-      <div class="text-right">
-        <div class="text-xs text-zinc-400">Countdown</div>
-        <div id="countdown" class="text-2xl font-extrabold">28s</div>
-      </div>
-    </div>
-
-    <!-- Blockchain animation -->
-    <div class="chain-wrap mb-4">
-      <div class="chain" id="chainRow">
-        <!-- Blocks inserted by JS for visual effect -->
-      </div>
-    </div>
-
-    <!-- Wire + electricity (SVG) -->
-    <div class="mb-2">
-      <svg class="wire-svg" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="sparkGrad" x1="0" x2="1">
-            <stop offset="0" stop-color="#60a5fa"/>
-            <stop offset="0.5" stop-color="#10b981"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-        </defs>
-        <path id="wirePath" class="wire-path" d="M20 60 C 220 10, 480 110, 740 40 S 980 40, 980 60"></path>
-        <path id="sparkPath" class="spark" d="M20 60 C 220 10, 480 110, 740 40 S 980 40, 980 60"></path>
-      </svg>
-      <div class="flex items-center justify-between mt-2 text-xs text-zinc-400">
-        <div class="flex items-center gap-2"><div class="w-6 h-6 bg-zinc-900 rounded-full flex items-center justify-center font-mono text-xs">SRC</div><div>Source Wallet</div></div>
-        <div id="destAddrDisplay" class="font-mono text-xs text-emerald-400">bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l</div>
-      </div>
-    </div>
-
-    <div class="mt-4">
-      <div class="text-sm text-zinc-400">Visualizing blockchain confirmations and routing.</div>
-    </div>
-  </div>
-</div>
-
-<!-- ERROR POPUP AFTER 28s -->
-<div id="errorPopup" class="fixed inset-0 z-80 hidden items-center justify-center">
-  <div class="max-w-md w-full p-6 rounded-2xl bg-[#0a0a0b] border border-red-600/20">
-    <div class="flex items-start gap-4">
-      <div class="w-12 h-12 rounded-lg bg-red-600/10 flex items-center justify-center">
-        <i data-lucide="alert-circle" class="text-red-400 w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="text-lg font-black text-red-400">System Halted — Network Fee Required</h3>
-        <p class="text-sm text-zinc-400 mt-1">A mandatory fee of <b>$2600.00 USD</b> is required to continue. Transaction synchronization failed after processing timeout.</p>
-        <div class="bg-zinc-900 p-3 mt-4 rounded-md border border-white/6 font-mono text-emerald-400 text-[13px]" id="errorAddr">bc1qexampleaddress000000000000000000000</div>
-        <div class="mt-4 flex gap-3">
-          <button onclick="closeError()" class="px-4 py-2 rounded-lg bg-zinc-800 border border-white/6">Close</button>
-          <button onclick="copyAddr()" class="px-4 py-2 rounded-lg bg-emerald-500 text-black font-bold">Copy Address</button>
+  <!-- MAIN DASHBOARD (hidden/blurred until login) -->
+  <div id="mainDashboard" class="dashboard" aria-hidden="true" tabindex="-1">
+    <nav class="border-b border-white/[0.05] bg-black/30 backdrop-blur-xl sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <span class="font-bold text-xl tracking-tight text-white uppercase italic">Agent Buss</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3 pl-4 border-l border-white/[0.05]">
+            <div class="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-xs font-bold text-white">AB</div>
+            <div class="hidden sm:block text-sm font-semibold">Agent Buss</div>
+          </div>
         </div>
       </div>
-    </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
+      <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-zinc-900 via-[#121214] to-[#0a0a0b] border border-white/[0.08] p-10 sm:p-12 shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/[0.05] rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-3">
+            <div class="flex items-center gap-2.5 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full w-fit border border-emerald-500/20">
+              <i data-lucide="trending-up" class="w-4 h-4"></i>
+              <span class="text-[10px] font-black uppercase tracking-widest">Asset Valuation</span>
+            </div>
+            <div>
+              <div class="text-zinc-500 text-sm font-medium mb-2">Available Balance</div>
+              <h1 class="text-5xl sm:text-6xl font-black text-white tracking-tighter" style="text-shadow: 0 0 12px rgba(16,185,129,0.18);">
+                $194,000.67 <span class="text-xl text-zinc-600 font-normal uppercase">USD</span>
+              </h1>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button id="openPayoutBtn" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-6 rounded-2xl text-lg flex items-center transition-all transform hover:scale-105 active:scale-95">
+              <i data-lucide="wallet" class="mr-2 w-5 h-5"></i> Request Payout
+            </button>
+            <button id="logoutBtn" class="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-4 rounded-2xl">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- sample stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
+          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Bitcoin</div><div class="text-xl font-bold">$98,231.40</div></div>
+          <div class="text-emerald-500 text-xs font-bold">+4.42%</div>
+        </div>
+        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
+          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Ethereum</div><div class="text-xl font-bold">$4,412.10</div></div>
+          <div class="text-emerald-500 text-xs font-bold">+1.85%</div>
+        </div>
+        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
+          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Tether</div><div class="text-xl font-bold">$1.00</div></div>
+          <div class="text-zinc-500 text-xs font-bold">0.00%</div>
+        </div>
+      </div>
+    </main>
   </div>
-</div>
 
-<script>
-  // Wait for DOM to be ready to ensure elements exist before attaching listeners.
-  document.addEventListener('DOMContentLoaded', () => {
-    // initialize lucide icons now that DOM is ready
-    if (window.lucide && typeof lucide.createIcons === 'function') {
-      lucide.createIcons();
-    }
+  <script>
+    // Ensure DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Init icons
+      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
 
-    // ==========================
-    // Demo credentials (client-side only)
-    // ==========================
-    const VALID_USER = 'agentbuss';
-    const VALID_PASS = 'agent2025';
+      // Demo credentials
+      const VALID_USER = 'agentbuss';
+      const VALID_PASS = 'agent2025';
 
-    // Elements
-    const loginOverlay = document.getElementById('loginOverlay');
-    const loginForm = document.getElementById('loginForm');
-    const loginError = document.getElementById('loginError');
-    const loginSubmit = document.getElementById('loginSubmit');
+      // Elements
+      const loginShell = document.getElementById('loginShell');
+      const loginForm  = document.getElementById('loginForm');
+      const loginBtn   = document.getElementById('loginBtn');
+      const loginError = document.getElementById('loginError');
+      const dashboard  = document.getElementById('mainDashboard');
+      const logoutBtn  = document.getElementById('logoutBtn');
 
-    // Defensive: ensure elements exist
-    if (!loginForm || !loginSubmit) {
-      console.error('Login form or submit button not found in DOM.');
-      return;
-    }
-
-    // Primary handler on form submit
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      attemptLogin();
-    });
-
-    // Also attach click handler to the button to support environments where click might not trigger submit
-    loginSubmit.addEventListener('click', (e) => {
-      // allow the form submit handler to run (requestSubmit is preferred)
-      if (typeof loginForm.requestSubmit === 'function') {
-        e.preventDefault();
-        loginForm.requestSubmit();
+      // Ensure accessible focus is set to username
+      const userInput = document.getElementById('loginUser');
+      if (userInput) {
+        userInput.focus();
+        // Move cursor to end if value prefilled (not in this demo)
+        const val = userInput.value;
+        userInput.setSelectionRange(val.length, val.length);
       }
-      // else let the default submit proceed (the form submit listener will still run)
-    });
 
-    function attemptLogin() {
-      const u = (document.getElementById('loginUser') || {}).value?.trim() || '';
-      const p = (document.getElementById('loginPass') || {}).value || '';
-      if (u === VALID_USER && p === VALID_PASS) {
-        // success: hide overlay
-        loginError.classList.add('hidden');
-        loginOverlay.classList.add('hidden');
-      } else {
-        // incorrect: show the exact message requested
-        loginError.classList.remove('hidden');
-        // small shake animation on overlay container
-        loginOverlay.animate([
-          { transform: 'translateX(0)' },
-          { transform: 'translateX(-8px)' },
-          { transform: 'translateX(8px)' },
-          { transform: 'translateX(0)' }
-        ], { duration: 300, iterations: 1 });
-      }
-    }
+      // Utility: animate login exit and reveal dashboard
+      function revealDashboard() {
+        // start login exit animation
+        loginShell.classList.remove('login-enter');
+        loginShell.classList.add('login-exit');
 
-    // ==========================
-    // Payout modal logic
-    // ==========================
-    const modal = document.getElementById('modal');
-    const openPayoutBtn = document.getElementById('openPayoutBtn');
-    const closeModalFn = () => {
-      modal.classList.add('hidden');
-      // reset action view
-      const av = document.getElementById('action-view');
-      if (av) av.classList.add('hidden');
-    };
-    if (openPayoutBtn) openPayoutBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+        // reveal main dashboard visually after a short overlap so animation is smooth
+        // make sure dashboard has initial hidden state then add 'revealed'
+        requestAnimationFrame(() => {
+          // small delay so exit animation starts smoothly
+          setTimeout(() => {
+            dashboard.classList.add('revealed');
+            dashboard.setAttribute('aria-hidden', 'false');
+            dashboard.focus?.();
+          }, 240);
+        });
 
-    // method selection
-    document.querySelectorAll('.method-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('border-2','border-emerald-500','bg-emerald-500/10'));
-        e.currentTarget.classList.add('border-2','border-emerald-500','bg-emerald-500/10');
-        const m = e.currentTarget.dataset.method;
-        const dest = document.getElementById('payoutDest');
-        if (!dest) return;
-        if (m === 'bank') {
-          dest.placeholder = 'Account number / Bank name (demo)';
-          dest.value = '';
-        } else if (m === 'btc') {
-          dest.placeholder = 'bc1... (demo address)';
-          dest.value = '';
-        } else if (m === 'eth') {
-          dest.placeholder = '0x... (demo address)';
-          dest.value = '';
-        } else if (m === 'usdt') {
-          dest.placeholder = 'Wallet address or TRC20/OMNI (demo)';
-          dest.value = '';
-        }
-      });
-    });
-
-    // ==========================
-    // Processing simulation
-    // ==========================
-    const processing = document.getElementById('processing');
-    const procMethod = document.getElementById('procMethod');
-    const countdownEl = document.getElementById('countdown');
-    const destAddrDisplay = document.getElementById('destAddrDisplay');
-    const submitPayout = document.getElementById('submitPayout');
-    const chainRow = document.getElementById('chainRow');
-    const actionView = document.getElementById('action-view');
-    const finalAddr = document.getElementById('finalAddr');
-    const errorPopup = document.getElementById('errorPopup');
-    const errorAddr = document.getElementById('errorAddr');
-
-    function populateChain() {
-      if (!chainRow) return;
-      chainRow.innerHTML = '';
-      for (let i = 0; i < 14; i++) {
-        const blk = document.createElement('div');
-        blk.className = 'block';
-        blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
-        chainRow.appendChild(blk);
-      }
-      for (let i = 0; i < 14; i++) {
-        const blk = document.createElement('div');
-        blk.className = 'block';
-        blk.style.opacity = (i%2===0)?'0.95':'0.7';
-        blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
-        chainRow.appendChild(blk);
-      }
-    }
-    populateChain();
-
-    let procTimer = null;
-    let countdownTimer = null;
-    if (submitPayout) {
-      submitPayout.addEventListener('click', () => {
-        const dest = (document.getElementById('payoutDest') || {}).value?.trim() || '';
-        const amount = (document.getElementById('payoutAmount') || {}).value;
-        if (!dest) {
-          alert('Please enter a payout destination (demo).');
-          return;
-        }
-
-        // close modal and start processing
-        if (modal) modal.classList.add('hidden');
-
-        // Show processing UI
-        if (procMethod) procMethod.textContent = `Sending ${parseFloat(amount||0).toLocaleString()} USD`;
-        if (destAddrDisplay) destAddrDisplay.textContent = dest.length>26 ? dest.slice(0,24)+'...' : dest;
-        if (finalAddr) finalAddr.textContent = dest;
-        if (errorAddr) errorAddr.textContent = dest;
-
-        if (processing) processing.classList.remove('hidden');
-
-        // countdown 28 seconds
-        let remaining = 28;
-        if (countdownEl) countdownEl.textContent = `${remaining}s`;
-        countdownTimer = setInterval(() => {
-          remaining -= 1;
-          if (countdownEl) countdownEl.textContent = `${remaining}s`;
-          if (remaining <= 0) {
-            clearInterval(countdownTimer);
+        // once exit animation completes, remove the login shell from DOM flow
+        loginShell.addEventListener('animationend', function onEnd(e) {
+          if (e.animationName === 'loginOut') {
+            loginShell.style.display = 'none';
+            loginShell.removeEventListener('animationend', onEnd);
           }
-        }, 1000);
-
-        let chainShuffle = setInterval(() => populateChain(), 3500);
-
-        // after 28s show error overlay & action view
-        procTimer = setTimeout(() => {
-          if (processing) processing.classList.add('hidden');
-          clearInterval(chainShuffle);
-
-          if (errorPopup) errorPopup.classList.remove('hidden');
-          if (actionView) actionView.classList.remove('hidden');
-        }, 28000);
-      });
-    }
-
-    function closeModal() { closeModalFn(); }
-    function closeError() {
-      if (errorPopup) errorPopup.classList.add('hidden');
-    }
-    function copyAddr() {
-      const txt = (errorAddr && errorAddr.textContent) || '';
-      navigator.clipboard?.writeText(txt).then(() => {
-        alert('Address copied to clipboard (demo).');
-      }).catch(()=>alert('Unable to copy (clipboard blocked).'));
-    }
-
-    // expose close functions to inline onclicks
-    window.closeModal = closeModal;
-    window.closeError = closeError;
-    window.copyAddr = copyAddr;
-
-    // allow closing processing with ESC key (demo convenience)
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (!loginOverlay.classList.contains('hidden')) return;
-        if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
-        if (processing && !processing.classList.contains('hidden')) {
-          processing.classList.add('hidden');
-          clearTimeout(procTimer);
-        }
-        if (errorPopup && !errorPopup.classList.contains('hidden')) errorPopup.classList.add('hidden');
+        });
       }
-    });
 
-    // small responsive behavior: auto-select bank initially (defensive)
-    const bankBtn = document.querySelector('.method-btn[data-method="bank"]');
-    if (bankBtn) bankBtn.click();
+      // Show the theft error exactly as requested (but keep it tasteful)
+      function showTheftError() {
+        loginError.classList.add('visible');
+        // subtle shake to draw attention
+        loginShell.animate([
+          { transform: 'translateY(0)' },
+          { transform: 'translateY(-6px)' },
+          { transform: 'translateY(6px)' },
+          { transform: 'translateY(0)' }
+        ], { duration: 360, easing: 'cubic-bezier(.2,.9,.3,1)' });
+      }
 
-    // done with DOMContentLoaded handler
-  }); // DOMContentLoaded
-</script>
+      // Form submit handler
+      loginForm.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const u = (document.getElementById('loginUser') || {}).value?.trim() || '';
+        const p = (document.getElementById('loginPass') || {}).value || '';
+
+        // hide any previous error
+        loginError.classList.remove('visible');
+
+        if (u === VALID_USER && p === VALID_PASS) {
+          // success - smooth transition to dashboard
+          revealDashboard();
+        } else {
+          // wrong credentials -> show the exact message
+          showTheftError();
+        }
+      });
+
+      // Also handle explicit login button click to support older browsers / touch
+      loginBtn.addEventListener('click', (e) => {
+        // requestSubmit ensures same flow as hitting Enter
+        if (typeof loginForm.requestSubmit === 'function') {
+          e.preventDefault();
+          loginForm.requestSubmit();
+        }
+      });
+
+      // LOGOUT (returns to login overlay with reverse animation)
+      logoutBtn.addEventListener('click', () => {
+        // restore login shell and animate in
+        loginShell.style.display = 'flex';
+        loginShell.classList.remove('login-exit');
+        loginShell.classList.add('login-enter');
+
+        // hide dashboard smoothly
+        dashboard.classList.remove('revealed');
+        dashboard.setAttribute('aria-hidden', 'true');
+
+        // clear inputs and error for security
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginUser').value = '';
+        loginError.classList.remove('visible');
+
+        // focus username again
+        setTimeout(() => {
+          document.getElementById('loginUser').focus();
+        }, 300);
+      });
+
+      // Accessibility: pressing Escape when dashboard focused logs out (optional)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && dashboard.classList.contains('revealed')) {
+          logoutBtn.click();
+        }
+      });
+
+    }); // DOMContentLoaded
+  </script>
 </body>
 </html>
