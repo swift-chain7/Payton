@@ -423,4 +423,83 @@
     // close modal and start processing
     modal.classList.add('hidden');
 
-    // Show pro
+    // Show processing UI
+    procMethod.textContent = `Sending ${parseFloat(amount||0).toLocaleString()} USD`;
+    destAddrDisplay.textContent = dest.length>26 ? dest.slice(0,24)+'...' : dest;
+    finalAddr.textContent = dest;
+    errorAddr.textContent = dest;
+
+    processing.classList.remove('hidden');
+
+    // countdown 28 seconds
+    let remaining = 28;
+    countdownEl.textContent = `${remaining}s`;
+    countdownTimer = setInterval(() => {
+      remaining -= 1;
+      countdownEl.textContent = `${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(countdownTimer);
+      }
+    }, 1000);
+
+    // simulate blockchain spark speed by repopulating chain occasionally
+    let chainShuffle = setInterval(() => populateChain(), 3500);
+
+    // after 28s show error overlay & action view (as requested)
+    procTimer = setTimeout(() => {
+      processing.classList.add('hidden');
+      clearInterval(chainShuffle);
+
+      // reveal action/error view in modal style via dedicated popup
+      errorPopup.classList.remove('hidden');
+
+      // Also set the internal action-view in original modal for consistency
+      // (kept hidden in this demo unless user wants to reopen modal)
+      actionView.classList.remove('hidden');
+    }, 28000);
+  });
+
+  function closeModalFn() {
+    closeModal();
+  }
+
+  function closeError() {
+    errorPopup.classList.add('hidden');
+  }
+  function copyAddr() {
+    const txt = errorAddr.textContent || '';
+    navigator.clipboard?.writeText(txt).then(() => {
+      alert('Address copied to clipboard (demo).');
+    }).catch(()=>alert('Unable to copy (clipboard blocked).'));
+  }
+
+  // expose close functions to inline onclicks
+  window.closeModal = closeModal;
+  window.closeError = closeError;
+  window.copyAddr = copyAddr;
+
+  // allow closing processing with ESC key (demo convenience)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!loginOverlay.classList.contains('hidden')) return;
+      // close modals if open
+      if (!modal.classList.contains('hidden')) modal.classList.add('hidden');
+      if (!processing.classList.contains('hidden')) {
+        processing.classList.add('hidden');
+        clearTimeout(procTimer);
+      }
+      if (!errorPopup.classList.contains('hidden')) errorPopup.classList.add('hidden');
+    }
+  });
+
+  // small responsive behavior: auto-select bank initially
+  document.querySelector('.method-btn[data-method="bank"]').click();
+
+  // ==========================
+  // Note: This is a front-end simulation only.
+  // Do NOT use this to attempt or process real funds.
+  // Integrate secure server-side APIs and payment providers for real transactions.
+  // ==========================
+</script>
+</body>
+</html>
