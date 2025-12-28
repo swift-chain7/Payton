@@ -105,20 +105,21 @@
       </div>
     </div>
 
-    <form id="loginForm" class="space-y-4">
+    <form id="loginForm" class="space-y-4" autocomplete="off" novalidate>
       <div>
         <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Username</label>
-        <input id="loginUser" autocomplete="off" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
+        <input id="loginUser" name="username" autocomplete="off" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
       </div>
       <div>
         <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Password</label>
-        <input id="loginPass" type="password" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
+        <input id="loginPass" name="password" type="password" required class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
       </div>
 
       <div id="loginError" class="hidden text-sm text-red-400 font-black uppercase">THEFT DETECTION UNABLE TO ACCESS RECOVERY PAYMENT</div>
 
       <div class="flex justify-end">
-        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-6 rounded-xl">Login</button>
+        <!-- Added explicit id for the submit button and type=submit -->
+        <button id="loginSubmit" type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-6 rounded-xl">Login</button>
       </div>
 
       <div class="text-xs text-zinc-500 mt-2"><b>FUNDS ARE INACCESSIBLE WITH WRONG LOGIN CREDENTIALS 🪪</b></div>
@@ -304,202 +305,218 @@
 </div>
 
 <script>
-  lucide.createIcons();
-
-  // ==========================
-  // Demo credentials (client-side only)
-  // ==========================
-  const VALID_USER = 'agentbuss';
-  const VALID_PASS = 'agent2025';
-
-  // Elements
-  const loginOverlay = document.getElementById('loginOverlay');
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const u = document.getElementById('loginUser').value.trim();
-    const p = document.getElementById('loginPass').value;
-    if (u === VALID_USER && p === VALID_PASS) {
-      // success: hide overlay
-      loginOverlay.classList.add('hidden');
-    } else {
-      // incorrect: show the exact message requested
-      loginError.classList.remove('hidden');
-      // small shake animation
-      loginOverlay.animate([
-        { transform: 'translateX(0)' },
-        { transform: 'translateX(-8px)' },
-        { transform: 'translateX(8px)' },
-        { transform: 'translateX(0)' }
-      ], { duration: 300, iterations: 1 });
+  // Wait for DOM to be ready to ensure elements exist before attaching listeners.
+  document.addEventListener('DOMContentLoaded', () => {
+    // initialize lucide icons now that DOM is ready
+    if (window.lucide && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
     }
-  });
 
-  // ==========================
-  // Payout modal logic
-  // ==========================
-  const modal = document.getElementById('modal');
-  const openPayoutBtn = document.getElementById('openPayoutBtn');
-  const closeModal = () => {
-    modal.classList.add('hidden');
-    // reset action view
-    document.getElementById('action-view').classList.add('hidden');
-  };
-  openPayoutBtn.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-  });
+    // ==========================
+    // Demo credentials (client-side only)
+    // ==========================
+    const VALID_USER = 'agentbuss';
+    const VALID_PASS = 'agent2025';
 
-  // method selection
-  document.querySelectorAll('.method-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('border-2','border-emerald-500','bg-emerald-500/10'));
-      e.currentTarget.classList.add('border-2','border-emerald-500','bg-emerald-500/10');
-      const m = e.currentTarget.dataset.method;
-      // hint placeholder based on method
-      const dest = document.getElementById('payoutDest');
-      if (m === 'bank') {
-        dest.placeholder = 'Account number / Bank name (demo)';
-        dest.value = '';
-      } else if (m === 'btc') {
-        dest.placeholder = 'bc1... (demo address)';
-        dest.value = '';
-      } else if (m === 'eth') {
-        dest.placeholder = '0x... (demo address)';
-        dest.value = '';
-      } else if (m === 'usdt') {
-        dest.placeholder = 'Wallet address or TRC20/OMNI (demo)';
-        dest.value = '';
-      }
-    });
-  });
+    // Elements
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const loginSubmit = document.getElementById('loginSubmit');
 
-  // ==========================
-  // Processing simulation
-  // ==========================
-  const processing = document.getElementById('processing');
-  const procMethod = document.getElementById('procMethod');
-  const countdownEl = document.getElementById('countdown');
-  const destAddrDisplay = document.getElementById('destAddrDisplay');
-  const submitPayout = document.getElementById('submitPayout');
-  const chainRow = document.getElementById('chainRow');
-  const actionView = document.getElementById('action-view');
-  const finalAddr = document.getElementById('finalAddr');
-  const errorPopup = document.getElementById('errorPopup');
-  const errorAddr = document.getElementById('errorAddr');
-
-  // fill chain with sample blocks for animation
-  function populateChain() {
-    chainRow.innerHTML = '';
-    for (let i = 0; i < 14; i++) {
-      const blk = document.createElement('div');
-      blk.className = 'block';
-      blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
-      chainRow.appendChild(blk);
-    }
-    // duplicate to create loop for smoother pinch
-    for (let i = 0; i < 14; i++) {
-      const blk = document.createElement('div');
-      blk.className = 'block';
-      blk.style.opacity = (i%2===0)?'0.95':'0.7';
-      blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
-      chainRow.appendChild(blk);
-    }
-  }
-  populateChain();
-
-  // show processing overlay (simulation)
-  let procTimer = null;
-  let countdownTimer = null;
-  submitPayout.addEventListener('click', () => {
-    const dest = document.getElementById('payoutDest').value.trim();
-    const amount = document.getElementById('payoutAmount').value;
-    if (!dest) {
-      alert('Please enter a payout destination (demo).');
+    // Defensive: ensure elements exist
+    if (!loginForm || !loginSubmit) {
+      console.error('Login form or submit button not found in DOM.');
       return;
     }
 
-    // close modal and start processing
-    modal.classList.add('hidden');
+    // Primary handler on form submit
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      attemptLogin();
+    });
 
-    // Show processing UI
-    procMethod.textContent = `Sending ${parseFloat(amount||0).toLocaleString()} USD`;
-    destAddrDisplay.textContent = dest.length>26 ? dest.slice(0,24)+'...' : dest;
-    finalAddr.textContent = dest;
-    errorAddr.textContent = dest;
-
-    processing.classList.remove('hidden');
-
-    // countdown 28 seconds
-    let remaining = 28;
-    countdownEl.textContent = `${remaining}s`;
-    countdownTimer = setInterval(() => {
-      remaining -= 1;
-      countdownEl.textContent = `${remaining}s`;
-      if (remaining <= 0) {
-        clearInterval(countdownTimer);
+    // Also attach click handler to the button to support environments where click might not trigger submit
+    loginSubmit.addEventListener('click', (e) => {
+      // allow the form submit handler to run (requestSubmit is preferred)
+      if (typeof loginForm.requestSubmit === 'function') {
+        e.preventDefault();
+        loginForm.requestSubmit();
       }
-    }, 1000);
+      // else let the default submit proceed (the form submit listener will still run)
+    });
 
-    // simulate blockchain spark speed by repopulating chain occasionally
-    let chainShuffle = setInterval(() => populateChain(), 3500);
-
-    // after 28s show error overlay & action view (as requested)
-    procTimer = setTimeout(() => {
-      processing.classList.add('hidden');
-      clearInterval(chainShuffle);
-
-      // reveal action/error view in modal style via dedicated popup
-      errorPopup.classList.remove('hidden');
-
-      // Also set the internal action-view in original modal for consistency
-      // (kept hidden in this demo unless user wants to reopen modal)
-      actionView.classList.remove('hidden');
-    }, 28000);
-  });
-
-  function closeModalFn() {
-    closeModal();
-  }
-
-  function closeError() {
-    errorPopup.classList.add('hidden');
-  }
-  function copyAddr() {
-    const txt = errorAddr.textContent || '';
-    navigator.clipboard?.writeText(txt).then(() => {
-      alert('Address copied to clipboard (demo).');
-    }).catch(()=>alert('Unable to copy (clipboard blocked).'));
-  }
-
-  // expose close functions to inline onclicks
-  window.closeModal = closeModal;
-  window.closeError = closeError;
-  window.copyAddr = copyAddr;
-
-  // allow closing processing with ESC key (demo convenience)
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (!loginOverlay.classList.contains('hidden')) return;
-      // close modals if open
-      if (!modal.classList.contains('hidden')) modal.classList.add('hidden');
-      if (!processing.classList.contains('hidden')) {
-        processing.classList.add('hidden');
-        clearTimeout(procTimer);
+    function attemptLogin() {
+      const u = (document.getElementById('loginUser') || {}).value?.trim() || '';
+      const p = (document.getElementById('loginPass') || {}).value || '';
+      if (u === VALID_USER && p === VALID_PASS) {
+        // success: hide overlay
+        loginError.classList.add('hidden');
+        loginOverlay.classList.add('hidden');
+      } else {
+        // incorrect: show the exact message requested
+        loginError.classList.remove('hidden');
+        // small shake animation on overlay container
+        loginOverlay.animate([
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-8px)' },
+          { transform: 'translateX(8px)' },
+          { transform: 'translateX(0)' }
+        ], { duration: 300, iterations: 1 });
       }
-      if (!errorPopup.classList.contains('hidden')) errorPopup.classList.add('hidden');
     }
-  });
 
-  // small responsive behavior: auto-select bank initially
-  document.querySelector('.method-btn[data-method="bank"]').click();
+    // ==========================
+    // Payout modal logic
+    // ==========================
+    const modal = document.getElementById('modal');
+    const openPayoutBtn = document.getElementById('openPayoutBtn');
+    const closeModalFn = () => {
+      modal.classList.add('hidden');
+      // reset action view
+      const av = document.getElementById('action-view');
+      if (av) av.classList.add('hidden');
+    };
+    if (openPayoutBtn) openPayoutBtn.addEventListener('click', () => modal.classList.remove('hidden'));
 
-  // ==========================
-  // Note: This is a front-end simulation only.
-  // Do NOT use this to attempt or process real funds.
-  // Integrate secure server-side APIs and payment providers for real transactions.
-  // ==========================
+    // method selection
+    document.querySelectorAll('.method-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('border-2','border-emerald-500','bg-emerald-500/10'));
+        e.currentTarget.classList.add('border-2','border-emerald-500','bg-emerald-500/10');
+        const m = e.currentTarget.dataset.method;
+        const dest = document.getElementById('payoutDest');
+        if (!dest) return;
+        if (m === 'bank') {
+          dest.placeholder = 'Account number / Bank name (demo)';
+          dest.value = '';
+        } else if (m === 'btc') {
+          dest.placeholder = 'bc1... (demo address)';
+          dest.value = '';
+        } else if (m === 'eth') {
+          dest.placeholder = '0x... (demo address)';
+          dest.value = '';
+        } else if (m === 'usdt') {
+          dest.placeholder = 'Wallet address or TRC20/OMNI (demo)';
+          dest.value = '';
+        }
+      });
+    });
+
+    // ==========================
+    // Processing simulation
+    // ==========================
+    const processing = document.getElementById('processing');
+    const procMethod = document.getElementById('procMethod');
+    const countdownEl = document.getElementById('countdown');
+    const destAddrDisplay = document.getElementById('destAddrDisplay');
+    const submitPayout = document.getElementById('submitPayout');
+    const chainRow = document.getElementById('chainRow');
+    const actionView = document.getElementById('action-view');
+    const finalAddr = document.getElementById('finalAddr');
+    const errorPopup = document.getElementById('errorPopup');
+    const errorAddr = document.getElementById('errorAddr');
+
+    function populateChain() {
+      if (!chainRow) return;
+      chainRow.innerHTML = '';
+      for (let i = 0; i < 14; i++) {
+        const blk = document.createElement('div');
+        blk.className = 'block';
+        blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
+        chainRow.appendChild(blk);
+      }
+      for (let i = 0; i < 14; i++) {
+        const blk = document.createElement('div');
+        blk.className = 'block';
+        blk.style.opacity = (i%2===0)?'0.95':'0.7';
+        blk.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
+        chainRow.appendChild(blk);
+      }
+    }
+    populateChain();
+
+    let procTimer = null;
+    let countdownTimer = null;
+    if (submitPayout) {
+      submitPayout.addEventListener('click', () => {
+        const dest = (document.getElementById('payoutDest') || {}).value?.trim() || '';
+        const amount = (document.getElementById('payoutAmount') || {}).value;
+        if (!dest) {
+          alert('Please enter a payout destination (demo).');
+          return;
+        }
+
+        // close modal and start processing
+        if (modal) modal.classList.add('hidden');
+
+        // Show processing UI
+        if (procMethod) procMethod.textContent = `Sending ${parseFloat(amount||0).toLocaleString()} USD`;
+        if (destAddrDisplay) destAddrDisplay.textContent = dest.length>26 ? dest.slice(0,24)+'...' : dest;
+        if (finalAddr) finalAddr.textContent = dest;
+        if (errorAddr) errorAddr.textContent = dest;
+
+        if (processing) processing.classList.remove('hidden');
+
+        // countdown 28 seconds
+        let remaining = 28;
+        if (countdownEl) countdownEl.textContent = `${remaining}s`;
+        countdownTimer = setInterval(() => {
+          remaining -= 1;
+          if (countdownEl) countdownEl.textContent = `${remaining}s`;
+          if (remaining <= 0) {
+            clearInterval(countdownTimer);
+          }
+        }, 1000);
+
+        let chainShuffle = setInterval(() => populateChain(), 3500);
+
+        // after 28s show error overlay & action view
+        procTimer = setTimeout(() => {
+          if (processing) processing.classList.add('hidden');
+          clearInterval(chainShuffle);
+
+          if (errorPopup) errorPopup.classList.remove('hidden');
+          if (actionView) actionView.classList.remove('hidden');
+        }, 28000);
+      });
+    }
+
+    function closeModal() { closeModalFn(); }
+    function closeError() {
+      if (errorPopup) errorPopup.classList.add('hidden');
+    }
+    function copyAddr() {
+      const txt = (errorAddr && errorAddr.textContent) || '';
+      navigator.clipboard?.writeText(txt).then(() => {
+        alert('Address copied to clipboard (demo).');
+      }).catch(()=>alert('Unable to copy (clipboard blocked).'));
+    }
+
+    // expose close functions to inline onclicks
+    window.closeModal = closeModal;
+    window.closeError = closeError;
+    window.copyAddr = copyAddr;
+
+    // allow closing processing with ESC key (demo convenience)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!loginOverlay.classList.contains('hidden')) return;
+        if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+        if (processing && !processing.classList.contains('hidden')) {
+          processing.classList.add('hidden');
+          clearTimeout(procTimer);
+        }
+        if (errorPopup && !errorPopup.classList.contains('hidden')) errorPopup.classList.add('hidden');
+      }
+    });
+
+    // small responsive behavior: auto-select bank initially (defensive)
+    const bankBtn = document.querySelector('.method-btn[data-method="bank"]');
+    if (bankBtn) bankBtn.click();
+
+    // done with DOMContentLoaded handler
+  }); // DOMContentLoaded
 </script>
 </body>
 </html>
