@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MEMPOOL BLOCKCHAIN</title>
+  <title>Agent Buss — Secure Dashboard</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,335 +11,578 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-    :root {
-      --emerald: #10b981;
-      --bg: #050507;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root{
+      --bg:#070708;
+      --card:#0e1113;
+      --accent:#10b981;
+      --muted:#9ca3af;
       --glass: rgba(255,255,255,0.03);
     }
+
     html,body { height:100%; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(16,185,129,0.06), transparent 8%),
-                  radial-gradient(1000px 500px at 90% 90%, rgba(96,165,250,0.03), transparent 10%),
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(800px 400px at 10% 10%, rgba(16,185,129,0.04), transparent 6%),
+                  radial-gradient(700px 300px at 90% 90%, rgba(96,165,250,0.02), transparent 8%),
                   var(--bg);
-      color: #fff;
+      color:#e6eef3;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
-      overflow-y: auto;
     }
 
-    /* LOGIN LAYOUT */
+    /* NAV */
+    .nav {
+      backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(10,11,12,0.6), rgba(8,9,10,0.45));
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Login shell */
     #loginShell {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 90;
-      background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.8));
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-      transition: opacity .6s ease, transform .6s ease;
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:90;
+      background: linear-gradient(180deg, rgba(2,6,23,0.7), rgba(2,6,23,0.85));
+      padding:24px;
     }
-
-    /* Entrance/exit animations */
-    .login-enter {
-      animation: loginIn .6s cubic-bezier(.22,.9,.35,1) both;
-    }
-    .login-exit {
-      animation: loginOut .6s cubic-bezier(.22,.9,.35,1) both;
-    }
-    @keyframes loginIn {
-      from { opacity: 0; transform: translateY(24px) scale(.98); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes loginOut {
-      from { opacity: 1; transform: translateY(0) scale(1); }
-      to   { opacity: 0; transform: translateY(-24px) scale(.98); }
-    }
-
-    /* Dashboard reveal animation */
-    .dashboard {
-      transform: translateY(18px) scale(.995);
-      opacity: 0;
-      filter: blur(6px) saturate(.9);
-      transition: transform .8s cubic-bezier(.22,.9,.35,1), opacity .8s ease, filter .9s ease;
-    }
-    .dashboard.revealed {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-      filter: blur(0) saturate(1);
-    }
-
-    /* Login card */
     .login-card {
-      width: 100%;
-      max-width: 440px;
-      border-radius: 18px;
-      padding: 26px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 10px 30px rgba(2,6,23,0.7), 0 2px 8px rgba(16,185,129,0.03);
+      width:100%;
+      max-width:420px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+      border-radius:16px;
+      padding:22px;
+      box-shadow: 0 20px 50px rgba(2,6,23,0.7);
     }
 
-    .logo-badge {
-      width: 56px; height:56px; border-radius:12px;
-      background: linear-gradient(180deg, #34d399, #059669);
-      display:flex; align-items:center; justify-content:center; font-weight:800; color:#04281b;
-      box-shadow: 0 8px 24px rgba(16,185,129,0.12);
-    }
-
-    /* Error message */
     .login-error {
-      display: none;
-      background: rgba(185,28,28,0.08);
+      display:none;
+      background: rgba(185,28,28,0.06);
       border: 1px solid rgba(185,28,28,0.14);
       color: #ffb4b4;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-weight: 800;
-      letter-spacing: .02em;
+      padding:8px 12px;
+      border-radius:8px;
+      font-weight:800;
+      letter-spacing:0.02em;
+      margin-top:6px;
     }
-    .login-error.visible { display: block; }
+    .login-error.show { display:block; }
 
-    /* Accent focus for inputs */
-    input:focus { box-shadow: 0 6px 24px rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.6) }
+    /* Dashboard reveal */
+    .dashboard { opacity:0; transform: translateY(18px) scale(.995); filter: blur(6px) saturate(.9); transition: all .8s cubic-bezier(.22,.9,.35,1); }
+    .dashboard.show { opacity:1; transform: translateY(0) scale(1); filter: none; }
 
-    /* small helper text */
-    .muted { color: #9ca3af; font-size: 13px; }
+    /* Professional card */
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+      border:1px solid rgba(255,255,255,0.04);
+      border-radius:14px;
+      padding:18px;
+    }
 
-    /* For reduced motion preferences */
-    @media (prefers-reduced-motion: reduce) {
-      .login-exit, .login-enter, .dashboard, .dashboard.revealed { transition: none; animation: none; }
+    /* blockchain animation */
+    .chain-wrap { position:relative; height:110px; overflow:hidden; }
+    .chain {
+      display:flex; gap:18px; position:absolute; left:0; top:50%; transform:translateY(-50%);
+      animation: scrollChain 9s linear infinite;
+    }
+    .block {
+      width:92px; height:64px; border-radius:12px;
+      background: linear-gradient(180deg,#0b1220,#071018);
+      border:1px solid rgba(255,255,255,0.03);
+      display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:800;
+      font-family:monospace; letter-spacing:-0.5px; box-shadow: 0 10px 30px rgba(8,12,15,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    @keyframes scrollChain {
+      0% { transform: translateX(0) translateY(-50%); }
+      100% { transform: translateX(-50%) translateY(-50%); }
+    }
+
+    /* wire + electricity */
+    .wire-svg { width:100%; height:120px; overflow:visible; }
+    .wire-path { stroke: rgba(255,255,255,0.06); stroke-width:4; filter: drop-shadow(0 0 6px rgba(16,185,129,0.06)); }
+    .spark { stroke: url(#sparkGrad); stroke-width:6; stroke-linecap:round; stroke-dasharray:2,180; filter: drop-shadow(0 0 8px rgba(16,185,129,0.95)); animation: sparkMove 1.9s linear infinite; }
+    @keyframes sparkMove { 0% { stroke-dashoffset:0; opacity:1 } 100% { stroke-dashoffset:-182; opacity:0.18 } }
+
+    /* destination pulse */
+    .dest-pulse { width:14px; height:14px; border-radius:999px; background: linear-gradient(90deg,var(--accent),#60a5fa); box-shadow:0 0 24px rgba(16,185,129,0.9); }
+
+    /* processing overlay */
+    .processing-overlay { position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(2,6,23,0.7), rgba(2,6,23,0.85)); }
+
+    /* subtle professional touches */
+    .small { font-size:13px; color:var(--muted); }
+    .muted { color:var(--muted); }
+    .kbd { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); padding:6px 10px; border-radius:8px; font-family:monospace; color:var(--accent); }
+
+    /* responsive tweaks */
+    @media (max-width:640px) {
+      .block{ width:70px; height:52px; font-size:12px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- LOGIN SHELL: appears first -->
-  <div id="loginShell" class="login-enter" aria-modal="true" role="dialog">
+  <!-- LOGIN SHELL (appears first) -->
+  <div id="loginShell" role="dialog" aria-modal="true">
     <div class="login-card">
-      <div class="flex items-center gap-4 mb-4">
-        <div class="logo-badge">AB</div>
-        <div>
-          <div class="font-black text-xl">Agent Buss</div>
-          <div class="muted text-xs">Secure access — enter your credentials</div>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div style="width:54px;height:54px;border-radius:12px;background:linear-gradient(180deg,#34d399,#059669);display:flex;align-items:center;justify-content:center;font-weight:800;color:#04281b">AB</div>
+          <div>
+            <div style="font-weight:800;font-size:18px">Agent Buss</div>
+            <div class="small muted">Secure access — authorized users only</div>
+          </div>
         </div>
+        <div class="small muted">Demo (client-side)</div>
       </div>
 
-      <form id="loginForm" class="space-y-4" autocomplete="off" novalidate>
-        <div>
-          <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Username</label>
-          <input id="loginUser" name="username" required
-                 class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
+      <form id="loginForm" autocomplete="off" novalidate>
+        <label class="small muted uppercase">Username</label>
+        <input id="loginUser" name="username" class="w-full mt-2 mb-3 bg-transparent border border-white/8 h-11 rounded-md px-3 outline-none" />
+
+        <label class="small muted uppercase">Password</label>
+        <input id="loginPass" name="password" type="password" class="w-full mt-2 mb-3 bg-transparent border border-white/8 h-11 rounded-md px-3 outline-none" />
+
+        <div id="loginError" class="login-error">THEFT DETECTION UNABLE TO ACCESS RECOVERY PAYMENT</div>
+
+        <div class="flex items-center justify-between mt-4">
+          <div class="muted small">No registration required</div>
+          <div class="flex gap-2">
+            <button id="loginBtn" type="submit" class="bg-accent text-black font-bold py-2 px-4 rounded-md">Login</button>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-xs text-zinc-400 font-black uppercase tracking-widest">Password</label>
-          <input id="loginPass" name="password" type="password" required
-                 class="w-full bg-transparent border border-white/10 h-12 rounded-lg px-3 outline-none" />
-        </div>
-
-        <div id="loginError" class="login-error text-sm">
-          THEFT DETECTION — UNABLE TO ACCESS RECOVERY PAYMENT
-        </div>
-
-        <div class="flex items-center justify-between gap-4">
-          <div class="muted text-xs">No registration — enter credentials to continue</div>
-          <button id="loginBtn" type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 px-5 rounded-lg">Login</button>
-        </div>
-
-        <div class="text-xs text-zinc-500 mt-2">Demo credentials: <b>agentbuss</b> / <b>agent2025</b> (client-side demo)</div>
+        <div class="mt-3 muted small">Credentials (demo): <span class="kbd">agentbuss</span> / <span class="kbd">agent2025</span></div>
       </form>
     </div>
   </div>
 
-  <!-- MAIN DASHBOARD (hidden/blurred until login) -->
-  <div id="mainDashboard" class="dashboard" aria-hidden="true" tabindex="-1">
-    <nav class="border-b border-white/[0.05] bg-black/30 backdrop-blur-xl sticky top-0 z-40">
+  <!-- DASHBOARD (hidden until login) -->
+  <div id="dashboard" class="dashboard" tabindex="-1" aria-hidden="true">
+    <nav class="nav">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-            <i data-lucide="shield-check" class="w-5 h-5"></i>
-          </div>
-          <span class="font-bold text-xl tracking-tight text-white uppercase italic">Agent Buss</span>
-        </div>
         <div class="flex items-center gap-4">
-          <div class="flex items-center gap-3 pl-4 border-l border-white/[0.05]">
-            <div class="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-xs font-bold text-white">AB</div>
-            <div class="hidden sm:block text-sm font-semibold">Agent Buss</div>
+          <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(180deg,#34d399,#059669);display:flex;align-items:center;justify-content:center;font-weight:800;color:#04281b">AB</div>
+          <div>
+            <div style="font-weight:800">Agent Buss</div>
+            <div class="small muted">Escrow & Settlement Dashboard</div>
           </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="small muted">Signed in as <strong>agentbuss</strong></div>
+          <button id="logoutBtn" class="bg-transparent hover:bg-white/2 rounded-md py-2 px-3 small muted">Logout</button>
         </div>
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
-      <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-zinc-900 via-[#121214] to-[#0a0a0b] border border-white/[0.08] p-10 sm:p-12 shadow-2xl">
-        <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/[0.05] rounded-full blur-[100px] pointer-events-none"></div>
-        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div class="space-y-3">
-            <div class="flex items-center gap-2.5 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full w-fit border border-emerald-500/20">
-              <i data-lucide="trending-up" class="w-4 h-4"></i>
-              <span class="text-[10px] font-black uppercase tracking-widest">Asset Valuation</span>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <!-- Top card -->
+      <section class="card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="muted small uppercase">Available Balance</div>
+          <div style="font-weight:800;font-size:32px">$194,000.67 <span class="muted small" style="font-weight:600">USD</span></div>
+          <div class="muted small mt-1">Portfolio valuation updated just now</div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="withdrawBtn" class="bg-accent text-black font-bold py-2 px-4 rounded-md flex items-center gap-2">
+            <i data-lucide="credit-card" class="w-4 h-4"></i> Withdraw
+          </button>
+          <button id="requestBtn" class="bg-white/5 text-white py-2 px-4 rounded-md small muted">New Request</button>
+        </div>
+      </section>
+
+      <!-- Recent activity & stats -->
+      <section class="grid md:grid-cols-3 gap-6">
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <div class="muted small uppercase">Market</div>
+            <div class="small muted">Live</div>
+          </div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between">
+              <div><div class="muted small">Bitcoin</div><div style="font-weight:700">$98,231.40</div></div>
+              <div class="text-emerald-400 font-bold text-sm">+4.42%</div>
             </div>
-            <div>
-              <div class="text-zinc-500 text-sm font-medium mb-2">Available Balance</div>
-              <h1 class="text-5xl sm:text-6xl font-black text-white tracking-tighter" style="text-shadow: 0 0 12px rgba(16,185,129,0.18);">
-                $194,000.67 <span class="text-xl text-zinc-600 font-normal uppercase">USD</span>
-              </h1>
+            <div class="mt-3">
+              <div class="flex items-center justify-between">
+                <div><div class="muted small">Ethereum</div><div style="font-weight:700">$4,412.10</div></div>
+                <div class="text-emerald-400 font-bold text-sm">+1.85%</div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="flex gap-3">
-            <button id="openPayoutBtn" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-6 rounded-2xl text-lg flex items-center transition-all transform hover:scale-105 active:scale-95">
-              <i data-lucide="wallet" class="mr-2 w-5 h-5"></i> Request Payout
-            </button>
-            <button id="logoutBtn" class="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-4 rounded-2xl">Logout</button>
+        <div class="card">
+          <div class="muted small uppercase">Recent Transactions</div>
+          <div class="mt-3 small muted">No recent on-chain settlements (demo)</div>
+        </div>
+
+        <div class="card">
+          <div class="muted small uppercase">Support</div>
+          <div class="mt-3 small muted">For urgent issues contact:</div>
+          <div class="mt-2 flex items-center gap-2">
+            <a id="waSupport" href="https://wa.me/16015950585" target="_blank" rel="noopener" class="bg-white/3 px-3 py-2 rounded-md small text-emerald-200 hover:bg-white/5">WhatsApp +1 601-595-0585</a>
           </div>
         </div>
-      </div>
-
-      <!-- sample stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Bitcoin</div><div class="text-xl font-bold">$98,231.40</div></div>
-          <div class="text-emerald-500 text-xs font-bold">+4.42%</div>
-        </div>
-        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Ethereum</div><div class="text-xl font-bold">$4,412.10</div></div>
-          <div class="text-emerald-500 text-xs font-bold">+1.85%</div>
-        </div>
-        <div class="bg-zinc-900/30 border border-white/[0.05] p-6 rounded-2xl flex justify-between items-center">
-          <div><div class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Tether</div><div class="text-xl font-bold">$1.00</div></div>
-          <div class="text-zinc-500 text-xs font-bold">0.00%</div>
-        </div>
-      </div>
+      </section>
     </main>
   </div>
 
-  <script>
-    // Ensure DOM ready
-    document.addEventListener('DOMContentLoaded', () => {
-      // Init icons
-      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+  <!-- WITHDRAW METHOD SELECTION MODAL -->
+  <div id="withdrawModal" class="fixed inset-0 z-80 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="w-full max-w-xl bg-card border border-white/6 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div style="font-weight:800">Withdraw Funds</div>
+          <div class="small muted">Choose method & destination</div>
+        </div>
+        <button onclick="closeWithdraw()" class="small muted">Close</button>
+      </div>
 
-      // Demo credentials
-      const VALID_USER = 'agentbuss';
-      const VALID_PASS = 'agent2025';
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <button class="method-btn py-3 px-3 border border-white/6 rounded-md text-left" data-method="bank">
+          <div class="font-bold">Bank</div>
+          <div class="small muted">Local bank transfer</div>
+        </button>
+        <button class="method-btn py-3 px-3 border border-white/6 rounded-md text-left" data-method="btc">
+          <div class="font-bold">BTC</div>
+          <div class="small muted">Bitcoin (on-chain)</div>
+        </button>
+        <button class="method-btn py-3 px-3 border border-white/6 rounded-md text-left" data-method="eth">
+          <div class="font-bold">ETH</div>
+          <div class="small muted">Ethereum (ERC-20)</div>
+        </button>
+        <button class="method-btn py-3 px-3 border border-white/6 rounded-md text-left" data-method="usdt">
+          <div class="font-bold">USDT</div>
+          <div class="small muted">USDT (ERC20 / TRC20)</div>
+        </button>
+      </div>
 
-      // Elements
-      const loginShell = document.getElementById('loginShell');
-      const loginForm  = document.getElementById('loginForm');
-      const loginBtn   = document.getElementById('loginBtn');
-      const loginError = document.getElementById('loginError');
-      const dashboard  = document.getElementById('mainDashboard');
-      const logoutBtn  = document.getElementById('logoutBtn');
+      <div id="withdrawForm" class="space-y-3">
+        <label class="small muted uppercase">Destination Address / Bank Details</label>
+        <input id="destInput" class="w-full bg-transparent border border-white/8 h-11 rounded-md px-3 outline-none" placeholder="Enter address or bank details" />
 
-      // Ensure accessible focus is set to username
-      const userInput = document.getElementById('loginUser');
-      if (userInput) {
-        userInput.focus();
-        // Move cursor to end if value prefilled (not in this demo)
-        const val = userInput.value;
-        userInput.setSelectionRange(val.length, val.length);
-      }
+        <div class="flex gap-3">
+          <input id="amountInput" type="number" min="1" step="0.01" value="1000" class="w-1/3 bg-transparent border border-white/8 h-11 rounded-md px-3 outline-none" />
+          <div class="small muted flex items-center px-3">USD</div>
+          <div class="flex-1 small muted flex items-center">Fee & processing simulated on next screen</div>
+        </div>
 
-      // Utility: animate login exit and reveal dashboard
-      function revealDashboard() {
-        // start login exit animation
-        loginShell.classList.remove('login-enter');
-        loginShell.classList.add('login-exit');
+        <div class="flex justify-end gap-3">
+          <button onclick="closeWithdraw()" class="py-2 px-4 rounded-md bg-white/5 muted small">Cancel</button>
+          <button id="startWithdraw" class="py-2 px-4 rounded-md bg-accent text-black font-bold">Proceed</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // reveal main dashboard visually after a short overlap so animation is smooth
-        // make sure dashboard has initial hidden state then add 'revealed'
-        requestAnimationFrame(() => {
-          // small delay so exit animation starts smoothly
-          setTimeout(() => {
-            dashboard.classList.add('revealed');
-            dashboard.setAttribute('aria-hidden', 'false');
-            dashboard.focus?.();
-          }, 240);
-        });
+  <!-- PROCESSING OVERLAY (BLOCKCHAIN VISUAL + WIRE + COUNTDOWN) -->
+  <div id="processingOverlay" class="processing-overlay hidden">
+    <div class="w-full max-w-3xl p-6 rounded-xl card">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="muted small uppercase">Transaction Processing</div>
+          <div id="procTitle" style="font-weight:800">Initializing...</div>
+          <div id="procMethodSmall" class="small muted mt-1">Simulated on-chain routing</div>
+        </div>
+        <div class="text-right">
+          <div class="small muted">Time remaining</div>
+          <div id="countdown" style="font-weight:800;font-size:20px">28s</div>
+        </div>
+      </div>
 
-        // once exit animation completes, remove the login shell from DOM flow
-        loginShell.addEventListener('animationend', function onEnd(e) {
-          if (e.animationName === 'loginOut') {
-            loginShell.style.display = 'none';
-            loginShell.removeEventListener('animationend', onEnd);
-          }
-        });
-      }
+      <!-- Blockchain animation -->
+      <div class="chain-wrap mb-4">
+        <div id="chainRow" class="chain" aria-hidden="true">
+          <!-- blocks generated by JS -->
+        </div>
+      </div>
 
-      // Show the theft error exactly as requested (but keep it tasteful)
-      function showTheftError() {
-        loginError.classList.add('visible');
-        // subtle shake to draw attention
+      <!-- Wire + electricity -->
+      <div>
+        <svg class="wire-svg" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" x2="1">
+              <stop offset="0" stop-color="#60a5fa"/>
+              <stop offset="0.5" stop-color="#10b981"/>
+              <stop offset="1" stop-color="#a78bfa"/>
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <path id="wirePath" class="wire-path" d="M20 60 C 220 10, 480 110, 740 40 S 980 40, 980 60"></path>
+          <path id="sparkPath" class="spark" d="M20 60 C 220 10, 480 110, 740 40 S 980 40, 980 60"></path>
+
+          <!-- dest pulse -->
+          <circle cx="980" cy="60" r="7" fill="#10b981" opacity="0.95" filter="url(#glow)"></circle>
+          <circle cx="980" cy="60" r="14" fill="none" stroke="rgba(16,185,129,0.12)"></circle>
+        </svg>
+
+        <div class="flex items-center justify-between mt-2">
+          <div class="flex items-center gap-2">
+            <div class="small muted">Source Wallet</div>
+            <div class="kbd">ESCROW</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="small muted">Destination</div>
+            <div id="destDisplay" class="kbd" style="max-width:320px;overflow:hidden;text-overflow:ellipses;white-space:nowrap;"></div>
+          </div>
+        </div>
+
+        <div class="mt-3 small muted">Visual demonstration only — no real funds are moved. After processing timeout an error & fee prompt will appear (simulated).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR / FEE PROMPT -->
+  <div id="feePrompt" class="fixed inset-0 z-90 hidden items-center justify-center bg-black/75 p-6">
+    <div class="w-full max-w-lg bg-card border border-red-600/20 rounded-xl p-6">
+      <div class="flex items-start gap-4">
+        <div style="width:48px;height:48px;border-radius:10px;background:rgba(185,28,28,0.08);display:flex;align-items:center;justify-content:center">
+          <i data-lucide="alert-circle" class="text-red-400 w-6 h-6"></i>
+        </div>
+
+        <div class="flex-1">
+          <div style="font-weight:800;color:#ffb4b4">System Halted — Network Fee Required</div>
+          <div class="small muted mt-2">A mandatory fee of <strong>$2,600.00 USD</strong> is required to synchronize the payout. Transaction failed to complete within the allowed processing window.</div>
+
+          <div class="mt-4">
+            <div class="small muted">Send BTC to the following address (demo):</div>
+            <div id="paymentAddress" class="mt-2 kbd font-mono">bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l</div>
+
+            <div class="mt-4 flex gap-3">
+              <button onclick="copyPaymentAddress()" class="py-2 px-3 bg-white/5 rounded-md small muted">Copy Address</button>
+              <a id="waLink" href="https://wa.me/16015950585" target="_blank" rel="noopener" class="py-2 px-3 bg-emerald-500 text-black rounded-md font-bold">Contact Support (WhatsApp)</a>
+              <button onclick="dismissFee()" class="py-2 px-3 bg-white/5 rounded-md small muted">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Ensure DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+
+    // Demo credentials (client-side only)
+    const VALID_USER = 'agentbuss';
+    const VALID_PASS = 'agent2025';
+
+    // Elements
+    const loginShell = document.getElementById('loginShell');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const dashboard = document.getElementById('dashboard');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const withdrawModal = document.getElementById('withdrawModal');
+    const startWithdrawBtn = document.getElementById('startWithdraw');
+    const destInput = document.getElementById('destInput');
+    const amountInput = document.getElementById('amountInput');
+    const destDisplay = document.getElementById('destDisplay');
+    const processingOverlay = document.getElementById('processingOverlay');
+    const chainRow = document.getElementById('chainRow');
+    const countdownEl = document.getElementById('countdown');
+    const procTitle = document.getElementById('procTitle');
+    const procMethodSmall = document.getElementById('procMethodSmall');
+    const feePrompt = document.getElementById('feePrompt');
+    const paymentAddressEl = document.getElementById('paymentAddress');
+    const waLink = document.getElementById('waLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Globals
+    let countdownTimer = null;
+    let processingTimer = null;
+
+    // Login flow
+    loginForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      loginError.classList.remove('show');
+      const u = (document.getElementById('loginUser') || {}).value?.trim() || '';
+      const p = (document.getElementById('loginPass') || {}).value || '';
+      if (u === VALID_USER && p === VALID_PASS) {
+        // Smooth reveal
+        loginShell.style.display = 'none';
+        dashboard.classList.add('show');
+        dashboard.setAttribute('aria-hidden', 'false');
+      } else {
+        // show required message
+        loginError.classList.add('show');
+        // gentle bounce
         loginShell.animate([
           { transform: 'translateY(0)' },
           { transform: 'translateY(-6px)' },
           { transform: 'translateY(6px)' },
           { transform: 'translateY(0)' }
-        ], { duration: 360, easing: 'cubic-bezier(.2,.9,.3,1)' });
+        ], { duration: 380, iterations: 1 });
       }
+    });
 
-      // Form submit handler
-      loginForm.addEventListener('submit', (ev) => {
-        ev.preventDefault();
-        const u = (document.getElementById('loginUser') || {}).value?.trim() || '';
-        const p = (document.getElementById('loginPass') || {}).value || '';
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      // hide dashboard, show login
+      dashboard.classList.remove('show');
+      dashboard.setAttribute('aria-hidden', 'true');
+      loginShell.style.display = 'flex';
+      // clear fields
+      document.getElementById('loginUser').value = '';
+      document.getElementById('loginPass').value = '';
+      loginError.classList.remove('show');
+    });
 
-        // hide any previous error
-        loginError.classList.remove('visible');
+    // Withdraw modal
+    withdrawBtn.addEventListener('click', () => {
+      withdrawModal.classList.remove('hidden');
+      withdrawModal.classList.add('flex');
+      // default method highlight
+      const btn = document.querySelector('.method-btn[data-method="bank"]');
+      if (btn) btn.classList.add('border-2','border-white/30','bg-white/2');
+    });
 
-        if (u === VALID_USER && p === VALID_PASS) {
-          // success - smooth transition to dashboard
-          revealDashboard();
-        } else {
-          // wrong credentials -> show the exact message
-          showTheftError();
+    window.closeWithdraw = () => {
+      withdrawModal.classList.add('hidden');
+      withdrawModal.classList.remove('flex');
+      // reset style
+      document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('border-2','border-white/30','bg-white/2'));
+      destInput.value = '';
+    };
+
+    // method selection buttons
+    document.querySelectorAll('.method-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('border-2','border-white/30','bg-white/2'));
+        const el = e.currentTarget;
+        el.classList.add('border-2','border-white/30','bg-white/2');
+        const m = el.dataset.method;
+        // set placeholder
+        if (m === 'bank') destInput.placeholder = 'Account number • Bank name • Routing (demo)';
+        else if (m === 'btc') destInput.placeholder = 'bc1... (Bitcoin address)';
+        else if (m === 'eth') destInput.placeholder = '0x... (Ethereum address)';
+        else if (m === 'usdt') destInput.placeholder = 'USDT address (ERC20/TRC20)';
+        // store selected method on modal
+        withdrawModal.dataset.method = m;
+      });
+    });
+
+    // Populate initial method as bank
+    const defBtn = document.querySelector('.method-btn[data-method="bank"]');
+    if (defBtn) defBtn.click();
+
+    // populate chain blocks
+    function populateChain(){
+      if(!chainRow) return;
+      chainRow.innerHTML = '';
+      for(let i=0;i<16;i++){
+        const d = document.createElement('div');
+        d.className = 'block';
+        d.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
+        chainRow.appendChild(d);
+      }
+      // duplicate for smooth animation
+      for(let i=0;i<16;i++){
+        const d = document.createElement('div');
+        d.className = 'block';
+        d.style.opacity = (i%2===0)?'0.95':'0.75';
+        d.textContent = Math.random().toString(36).slice(2,8).toUpperCase();
+        chainRow.appendChild(d);
+      }
+    }
+    populateChain();
+
+    // start processing simulation
+    startWithdrawBtn.addEventListener('click', () => {
+      const dest = (destInput.value || '').trim();
+      const amount = parseFloat(amountInput.value || '0') || 0;
+      if(!dest){
+        alert('Please enter a destination address or bank details (demo).');
+        return;
+      }
+      // hide withdraw modal
+      closeWithdraw();
+
+      // update UI
+      destDisplay.textContent = dest.length > 32 ? dest.slice(0,30) + '…' : dest;
+      procTitle.textContent = `Sending $${Number(amount).toLocaleString()} — Preparing chain`;
+      procMethodSmall.textContent = `Method: ${withdrawModal.dataset.method?.toUpperCase() || 'BANK'}`;
+
+      // show processing overlay
+      processingOverlay.classList.remove('hidden');
+
+      // countdown 28 seconds
+      let remaining = 28;
+      countdownEl.textContent = remaining + 's';
+      if(countdownTimer) clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        remaining -= 1;
+        countdownEl.textContent = remaining + 's';
+        if (remaining <= 0) {
+          clearInterval(countdownTimer);
         }
-      });
+      }, 1000);
 
-      // Also handle explicit login button click to support older browsers / touch
-      loginBtn.addEventListener('click', (e) => {
-        // requestSubmit ensures same flow as hitting Enter
-        if (typeof loginForm.requestSubmit === 'function') {
-          e.preventDefault();
-          loginForm.requestSubmit();
+      // repopulate chain occasionally for lively animation
+      const chainShuffle = setInterval(populateChain, 3600);
+
+      // after 28s show fee prompt (simulate failure/hold)
+      if(processingTimer) clearTimeout(processingTimer);
+      processingTimer = setTimeout(() => {
+        clearInterval(chainShuffle);
+        processingOverlay.classList.add('hidden');
+
+        // show fee prompt with payment address and support link
+        paymentAddressEl.textContent = 'bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l';
+        waLink.href = 'https://wa.me/16015950585';
+        feePrompt.classList.remove('hidden');
+        feePrompt.classList.add('flex');
+      }, 28000);
+    });
+
+    window.copyPaymentAddress = () => {
+      const text = paymentAddressEl?.textContent || '';
+      if(!text) return;
+      navigator.clipboard?.writeText(text).then(() => {
+        alert('Payment address copied to clipboard.');
+      }).catch(()=>alert('Unable to copy address (clipboard blocked).'));
+    };
+
+    window.dismissFee = () => {
+      feePrompt.classList.add('hidden');
+      feePrompt.classList.remove('flex');
+    };
+
+    // Support WA link already in markup. For safety ensure phone is formatted.
+    const whatsappNumber = '+16015950585';
+    waLink.setAttribute('title', `Contact support ${whatsappNumber}`);
+
+    // Accessibility: allow ESC to close modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!withdrawModal.classList.contains('hidden')) closeWithdraw();
+        if (!feePrompt.classList.contains('hidden')) dismissFee();
+        if (!processingOverlay.classList.contains('hidden')) {
+          processingOverlay.classList.add('hidden');
+          clearTimeout(processingTimer);
+          clearInterval(countdownTimer);
         }
-      });
-
-      // LOGOUT (returns to login overlay with reverse animation)
-      logoutBtn.addEventListener('click', () => {
-        // restore login shell and animate in
-        loginShell.style.display = 'flex';
-        loginShell.classList.remove('login-exit');
-        loginShell.classList.add('login-enter');
-
-        // hide dashboard smoothly
-        dashboard.classList.remove('revealed');
-        dashboard.setAttribute('aria-hidden', 'true');
-
-        // clear inputs and error for security
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginUser').value = '';
-        loginError.classList.remove('visible');
-
-        // focus username again
-        setTimeout(() => {
-          document.getElementById('loginUser').focus();
-        }, 300);
-      });
-
-      // Accessibility: pressing Escape when dashboard focused logs out (optional)
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && dashboard.classList.contains('revealed')) {
-          logoutBtn.click();
-        }
-      });
-
-    }); // DOMContentLoaded
-  </script>
+      }
+    });
+  });
+</script>
 </body>
 </html>
